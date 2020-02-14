@@ -8,7 +8,7 @@ CURRENT=`pwd`
 function test
 {
    set_env
-   go test -v $(go list ./... | grep -v vendor) --count 1 -covermode=atomic -timeout 120s
+   go test -v $(go list ./... | grep -v vendor) --count 1 -covermode=atomic --race -timeout 120s
 }
 
 function set_env
