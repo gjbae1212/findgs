@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -20,7 +21,6 @@ const (
 	dbFileName          = "cache.db"
 	userBucketName      = "user"
 	starredBucketSuffix = "starred"
-	maxQuerySize        = 10000
 )
 
 var (
@@ -33,6 +33,7 @@ var (
 
 type Searcher interface {
 	CreateIndex() error
+	Search(text string, size int) ([]*Result, error)
 }
 
 type searcher struct {
@@ -41,6 +42,11 @@ type searcher struct {
 	git      git.Git
 	db       *bolt.DB
 	index    bleve.Index
+}
+
+type Result struct {
+	*git.Starred
+	Score float64
 }
 
 func ConfigPath() (string, error) {
@@ -96,6 +102,42 @@ func NewSearcher(token string) (Searcher, error) {
 	}
 
 	return &searcher{git: git, db: db, index: index, gitToken: token, dbPath: dbPath}, nil
+}
+
+// Search executes full text search.
+func (s *searcher) Search(text string, size int) ([]*Result, error) {
+	text = strings.TrimSpace(text)
+	if text == "" {
+		return []*Result{}, nil
+	}
+
+	// search text from index.
+	query := bleve.NewMatchQuery(text)
+	search := bleve.NewSearchRequestOptions(query, size, 0, false)
+	search.SortBy([]string{"-_score", "_id"})
+	searchResult, err := s.index.Search(search)
+	if err != nil {
+		return nil, fmt.Errorf("[err] Search %w", err)
+	}
+
+	// get a detailed starred information
+	var list []*Result
+	s.db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(starredBucketName(s.gitToken)))
+		if bucket == nil {
+			return nil
+		}
+		for _, r := range searchResult.Hits {
+			data := bucket.Get([]byte(r.ID))
+			var starred *git.Starred
+			if err := json.Unmarshal(data, &starred); err == nil {
+				list = append(list, &Result{Starred: starred, Score: r.Score})
+			}
+		}
+		return nil
+	})
+
+	return list, nil
 }
 
 // CreateIndex makes bleve.Index

@@ -33,7 +33,37 @@ func TestNewSearcher(t *testing.T) {
 	}
 }
 
-func TestCreateIndex(t *testing.T) {
+func TestSearcher_Search(t *testing.T) {
+	assert := assert.New(t)
+
+	token := os.Getenv("GITHUB_TOKEN")
+	s, err := NewSearcher(token)
+	assert.NoError(err)
+	defer s.(*searcher).db.Close()
+	err = s.CreateIndex()
+	assert.NoError(err)
+
+	tests := map[string]struct {
+		input string
+		isErr bool
+	}{
+		"all": {input: "ssh certify"},
+	}
+
+	for _, t := range tests {
+		result, err := s.Search(t.input, 100)
+		assert.Equal(t.isErr, err != nil)
+		if err == nil {
+			log.Printf("==============%s=============\n", t.input)
+			for _, r := range result {
+				log.Println(r.FullName, r.Score)
+			}
+		}
+	}
+
+}
+
+func TestSearcher_CreateIndex(t *testing.T) {
 	assert := assert.New(t)
 
 	token := os.Getenv("GITHUB_TOKEN")
@@ -50,7 +80,7 @@ func TestCreateIndex(t *testing.T) {
 	for _, t := range tests {
 		err := s.CreateIndex()
 		assert.Equal(t.isErr, err != nil)
-		query := bleve.NewMatchQuery("docker")
+		query := bleve.NewMatchQuery("docker hello kubernetes")
 		search := bleve.NewSearchRequestOptions(query, 10000, 0, true)
 		search.SortBy([]string{"-_score", "_id"})
 		searchResult, err := s.(*searcher).index.Search(search)
