@@ -18,6 +18,7 @@ var (
 
 type Git interface {
 	User() (*User, error)
+	SetReadme(starred []*Starred)
 	ListStarredAll() ([]*Starred, error)
 	ListReadme(owners []string, repos []string) ([]*Readme, error)
 }
@@ -32,5 +33,5 @@ func NewGit(token string) (Git, error) {
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 	client := github.NewClient(oauth2.NewClient(context.Background(), ts))
 
-	return &wrapper{Client: client}, nil
+	return &wrapper{Client: client, token: token}, nil
 }

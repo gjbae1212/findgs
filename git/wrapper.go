@@ -38,6 +38,8 @@ type Starred struct {
 	CreatedAt       JsonTime `json:"created_at,omitempty"`
 	UpdateAt        JsonTime `json:"updated_at,omitempty"`
 	PushedAt        JsonTime `json:"pushed_at,omitempty"`
+	Readme          string   `json:"readme,omitempty"`
+	Error           error    `json:"-"`
 }
 
 type User struct {
@@ -47,6 +49,8 @@ type User struct {
 	Bio       string   `json:"bio,omitempty"`
 	CreatedAt JsonTime `json:"created_at,omitempty"`
 	UpdatedAt JsonTime `json:"updated_at,omitempty"`
+	Token     string   `json:"token"`
+	CachedAt  JsonTime `json:"cached_at"`
 }
 
 type JsonTime struct {
@@ -76,6 +80,7 @@ func (jt *JsonTime) UnmarshalJSON(bys []byte) error {
 
 type wrapper struct {
 	*github.Client
+	token string
 }
 
 // User returns github user object.
@@ -96,6 +101,8 @@ func (w *wrapper) User() (*User, error) {
 			Bio:       user.GetBio(),
 			CreatedAt: JsonTime{user.GetCreatedAt().Time},
 			UpdatedAt: JsonTime{user.GetUpdatedAt().Time},
+			CachedAt:  JsonTime{time.Now()},
+			Token:     w.token,
 		}, nil
 	case errors.As(err, &githubRateLimit):
 		return nil, fmt.Errorf("[err] NewGit %w", ErrApiQuotaExceed)
@@ -141,6 +148,43 @@ func (w *wrapper) ListStarredAll() ([]*Starred, error) {
 	}
 
 	return starred, nil
+}
+
+// SetReadme sets readme to starred.
+func (w *wrapper) SetReadme(starred []*Starred) {
+	if len(starred) == 0 {
+		return
+	}
+
+	total := len(starred)
+	queueSize := total/parallelSize + parallelSize
+
+	wg := sync.WaitGroup{}
+	var multiQueue []chan *Starred
+
+	for i := 0; i < parallelSize; i++ {
+		wg.Add(1)
+		ch := make(chan *Starred, queueSize)
+		multiQueue = append(multiQueue, ch)
+		go func(queue chan *Starred) {
+			for r := range queue {
+				w.setReadmeToStarred(r)
+			}
+			wg.Done()
+		}(ch)
+	}
+
+	// distributes items
+	for i, star := range starred {
+		hole := i % parallelSize
+		multiQueue[hole] <- star
+	}
+
+	// close channel
+	for _, ch := range multiQueue {
+		close(ch)
+	}
+	wg.Wait()
 }
 
 // ListReadme returns readme list.
@@ -191,15 +235,35 @@ func (w *wrapper) getReadme(owner, repo string) (string, error) {
 
 	readme, _, err := w.Repositories.GetReadme(ctx, owner, repo, nil)
 	if err != nil {
-		return "", fmt.Errorf("[err] GetReadme %w", err)
+		return "", fmt.Errorf("[err] getReadme %w", err)
 	}
 
 	content, err := readme.GetContent()
 	if err != nil {
-		return "", fmt.Errorf("[err] GetReadme %w", err)
+		return "", fmt.Errorf("[err] getReadme %w", err)
 	}
 
 	return content, nil
+}
+
+func (w *wrapper) setReadmeToStarred(s *Starred) {
+	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+	defer cancel()
+
+	readme, _, err := w.Repositories.GetReadme(ctx, s.Owner, s.Repo, nil)
+	if err != nil {
+		s.Error = fmt.Errorf("[err] setReadmeToStarred %w", err)
+		return
+	}
+
+	content, err := readme.GetContent()
+	if err != nil {
+		s.Error = fmt.Errorf("[err] setReadmeToStarred %w", err)
+		return
+	}
+
+	s.Readme = content
+	return
 }
 
 func (w *wrapper) listStarredPaging(page, perPage int) ([]*github.StarredRepository, *github.Response, error) {

@@ -189,7 +189,7 @@ func TestWrapper_ListStarredAll(t *testing.T) {
 	}
 }
 
-func TestWrapper_GetMultiReadme(t *testing.T) {
+func TestWrapper_ListReadme(t *testing.T) {
 	assert := assert.New(t)
 
 	g, err := NewGit(os.Getenv("GITHUB_TOKEN"))
@@ -231,5 +231,39 @@ func TestWrapper_GetMultiReadme(t *testing.T) {
 			}
 			color.Blue("Readme success %d, Readme error %d", successCount, errorCount)
 		}
+	}
+}
+
+func TestWrapper_SetReadme(t *testing.T) {
+	assert := assert.New(t)
+
+	g, err := NewGit(os.Getenv("GITHUB_TOKEN"))
+	assert.NoError(err)
+
+	starred, err := g.ListStarredAll()
+	assert.NoError(err)
+
+	tests := map[string]struct {
+		starred []*Starred
+		size    int
+		isErr   bool
+	}{
+		"fail":    {isErr: true},
+		"success": {starred: starred, size: len(starred)},
+	}
+
+	for _, t := range tests {
+		g.SetReadme(t.starred)
+		fail := 0
+		success := 0
+		for _, star := range t.starred {
+			if star.Error != nil {
+				fail++
+			} else if star.Readme != "" {
+				success++
+			}
+		}
+		assert.Equal(fail+success, t.size)
+		color.Blue("Readme success %d, Readme error %d", success, fail)
 	}
 }
