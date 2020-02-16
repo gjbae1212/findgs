@@ -2,16 +2,42 @@ package search
 
 import (
 	"encoding/json"
+
 	"log"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/mitchellh/go-homedir"
 	"github.com/blevesearch/bleve"
 	"github.com/boltdb/bolt"
 	"github.com/gjbae1212/findgs/git"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestClearAll(t *testing.T) {
+	assert := assert.New(t)
+	// ClearAll()
+	_ = assert
+}
+
+func TestConfigPath(t *testing.T) {
+	assert := assert.New(t)
+
+	home, _ := homedir.Dir()
+
+	tests := map[string]struct {
+		output string
+	}{
+		"success": {output: filepath.Join(home, ".findgs")},
+	}
+
+	for _, t := range tests {
+		result, _ := ConfigPath()
+		assert.Equal(t.output, result)
+	}
+}
 
 func TestNewSearcher(t *testing.T) {
 	assert := assert.New(t)
@@ -51,12 +77,12 @@ func TestSearcher_Search(t *testing.T) {
 	}
 
 	for _, t := range tests {
-		result, err := s.Search(t.input, 100)
+		result, err := s.Search(t.input, 1)
 		assert.Equal(t.isErr, err != nil)
 		if err == nil {
 			log.Printf("==============%s=============\n", t.input)
 			for _, r := range result {
-				log.Println(r.FullName, r.Score)
+				log.Println(r.FullName, r.Score, r.Readme)
 			}
 		}
 	}

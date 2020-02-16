@@ -49,6 +49,16 @@ type Result struct {
 	Score float64
 }
 
+// ClearAll clears all of cached data such as boltDB.
+func ClearAll() error {
+	cfgPath, err := ConfigPath()
+	if err != nil {
+		return fmt.Errorf("[err] ClearAll %w", err)
+	}
+	return os.RemoveAll(filepath.Join(cfgPath, dbFileName))
+}
+
+// ConfigPath returns config-path in machine.
 func ConfigPath() (string, error) {
 	configOnce.Do(func() {
 		// getting home directory.
@@ -140,8 +150,9 @@ func (s *searcher) Search(text string, size int) ([]*Result, error) {
 	return list, nil
 }
 
-// CreateIndex makes bleve.Index
+// CreateIndex is indexing to bleve.Index.
 func (s *searcher) CreateIndex() error {
+	color.Cyan("[start] initialize index.")
 	// get user
 	user, reload, err := s.getUser()
 	if err != nil {
@@ -164,7 +175,7 @@ func (s *searcher) CreateIndex() error {
 		}
 		return nil
 	}); err != nil {
-		os.RemoveAll(s.dbPath)
+		ClearAll()
 		color.Yellow("[err] collapse db file, so delete db file")
 		return fmt.Errorf("[err] createIndex %w", err)
 	}
@@ -222,23 +233,22 @@ func (s *searcher) CreateIndex() error {
 
 	// update and insert
 	if isNewIndex {
-		color.Blue("[refresh] all repositories")
+		color.White("[refresh] all repositories")
 		s.git.SetReadme(newStarredList)
 		s.writeDBAndIndex(newStarredList)
 	} else {
-
 		// insert or update starred
 		var insertList []*git.Starred
 		var updateList []*git.Starred
 		for _, newStarred := range newStarredList {
 			if oldStarred, ok := oldStarredMap[newStarred.FullName]; !ok {
 				insertList = append(insertList, newStarred)
-				color.Blue("[insert] %s repository pushed_at %s",
+				color.White("[insert] %s repository pushed_at %s",
 					newStarred.FullName, newStarred.PushedAt.Format(time.RFC3339))
 			} else {
 				if oldStarred.PushedAt.Unix() != newStarred.PushedAt.Unix() {
 					updateList = append(updateList, newStarred)
-					color.Blue("[update] %s repository pushed_at %s",
+					color.White("[update] %s repository pushed_at %s",
 						newStarred.FullName, newStarred.PushedAt.Format(time.RFC3339))
 				}
 			}
@@ -257,7 +267,7 @@ func (s *searcher) CreateIndex() error {
 		for _, oldStarred := range oldStarredList {
 			if _, ok := newStarredMap[oldStarred.FullName]; !ok {
 				deleteList = append(deleteList, oldStarred)
-				color.Blue("[delete] %s repository pushed_at %s",
+				color.White("[delete] %s repository pushed_at %s",
 					oldStarred.FullName, oldStarred.PushedAt.Format(time.RFC3339))
 			}
 		}
@@ -298,7 +308,7 @@ func (s *searcher) getUser() (user *git.User, reload bool, err error) {
 		return nil
 	})
 	if suberr != nil { // maybe collapse db file.
-		os.RemoveAll(s.dbPath)
+		ClearAll()
 		color.Yellow("[err] collapse db file, so delete db file")
 		err = fmt.Errorf("[err] getUser %w", suberr)
 		return
