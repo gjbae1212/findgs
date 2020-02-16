@@ -30,10 +30,10 @@ var (
 )
 
 var (
-	searchSuggest = prompt.Suggest{Text: "search", Description: "Search starred github repositories which matched text from Readme, topic, name ... and so on."}
+	searchSuggest = prompt.Suggest{Text: "search", Description: "Search starred github repositories which matched text from Readme, description, topic, name ... and so on."}
 	exitSuggest   = prompt.Suggest{Text: "exit", Description: "Good bye."}
 	openSuggest   = prompt.Suggest{Text: "open", Description: "Open a selected repository of found repositories to browser."}
-	listSuggest   = prompt.Suggest{Text: "list", Description: "Show searched repositories currently."}
+	listSuggest   = prompt.Suggest{Text: "list", Description: "Show searched repositories recently through search command."}
 
 	openNumSuggest  = prompt.Suggest{Text: "num", Description: "Open url to browser using num value."}
 	openNameSuggest = prompt.Suggest{Text: "name", Description: "Open url to browser using name value."}
@@ -109,6 +109,33 @@ func completer(d prompt.Document) []prompt.Suggest {
 			for _, f := range foundList {
 				suggests = append(suggests, prompt.Suggest{Text: fmt.Sprintf("%s", f.FullName)})
 			}
+			break
+		}
+
+		if strings.HasPrefix(subText, "num") {
+			seps := strings.Split(subText, " ")
+			if len(seps) > 1 {
+				numText := strings.TrimSpace(strings.Join(seps[1:], " "))
+				for i, _ := range foundList {
+					if strings.HasPrefix(fmt.Sprintf("%d", i+1), numText) {
+						suggests = append(suggests, prompt.Suggest{Text: fmt.Sprintf("%d", i+1)})
+					}
+				}
+				break
+			}
+		}
+
+		if strings.HasPrefix(subText, "name") {
+			seps := strings.Split(subText, " ")
+			if len(seps) > 1 {
+				repositoryText := strings.TrimSpace(strings.Join(seps[1:], " "))
+				for _, f := range foundList {
+					if strings.HasPrefix(strings.ToLower(f.FullName), repositoryText) {
+						suggests = append(suggests, prompt.Suggest{Text: fmt.Sprintf("%s", f.FullName)})
+					}
+				}
+				break
+			}
 		}
 	}
 	return prompt.FilterHasPrefix(suggests, d.GetWordBeforeCursor(), true)
@@ -157,9 +184,11 @@ func executor(t string) {
 		foundList = result
 		foundMap = make(map[string]*search.Result)
 		for _, found := range foundList {
-			foundMap[found.FullName] = found
+			foundMap[strings.ToLower(found.FullName)] = found
 		}
 		showSearchedList()
+	default:
+		color.Red("Not Found Command.")
 	}
 }
 
