@@ -77,7 +77,7 @@ func completer(d prompt.Document) []prompt.Suggest {
 	suggests := []prompt.Suggest{}
 	switch {
 	case text == "":
-		suggests = append(suggests, searchSuggest, exitSuggest, openSuggest, listSuggest)
+		suggests = append(suggests, searchSuggest, openSuggest, listSuggest, exitSuggest)
 	case "exit" != text && strings.Contains("exit", text):
 		suggests = append(suggests, exitSuggest)
 	case "open" != text && strings.Contains("open", text):
