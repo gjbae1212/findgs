@@ -102,7 +102,7 @@ func NewSearcher(token string) (Searcher, error) {
 	// make bolt db
 	db, err := bolt.Open(dbPath, os.ModePerm, &bolt.Options{Timeout: 2 * time.Second})
 	if err != nil {
-		return nil, fmt.Errorf("[err] NewSearcher fail db %w", err)
+		return nil, fmt.Errorf("[err] NewSearcher fail db %w.(maybe already running findgs)", err)
 	}
 
 	// make index

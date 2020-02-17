@@ -2,13 +2,14 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/c-bata/go-prompt"
 	"os"
 	"strconv"
 	"strings"
 
+	"github.com/c-bata/go-prompt"
 	"github.com/fatih/color"
 	"github.com/gjbae1212/findgs/search"
+	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -193,18 +194,47 @@ func executor(t string) {
 }
 
 func showSearchedList() {
+	// table writer
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"NUM", "SCORE", "NAME", "URL", "TOPIC", "DESCRIPTION"})
+	table.SetFooter([]string{"", "", "", "", "TOTAL", fmt.Sprintf("%d", len(foundList))})
+	table.SetBorder(false)
+	table.SetAutoMergeCells(true)
+	table.SetRowLine(true)
+	table.SetAlignment(tablewriter.ALIGN_CENTER)
+	table.SetRowLine(true)
+	table.SetHeaderColor(
+		tablewriter.Colors{tablewriter.Bold, tablewriter.BgGreenColor},
+		tablewriter.Colors{tablewriter.Bold, tablewriter.BgHiBlueColor},
+		tablewriter.Colors{tablewriter.Bold, tablewriter.BgCyanColor},
+		tablewriter.Colors{tablewriter.Bold, tablewriter.BgMagentaColor},
+		tablewriter.Colors{tablewriter.Bold, tablewriter.BgYellowColor},
+		tablewriter.Colors{tablewriter.Bold, tablewriter.BgRedColor})
+	table.SetColumnColor(
+		tablewriter.Colors{tablewriter.Bold},
+		tablewriter.Colors{},
+		tablewriter.Colors{tablewriter.Bold},
+		tablewriter.Colors{},
+		tablewriter.Colors{},
+		tablewriter.Colors{tablewriter.Bold})
+	table.SetFooterColor(
+		tablewriter.Colors{}, tablewriter.Colors{}, tablewriter.Colors{}, tablewriter.Colors{},
+		tablewriter.Colors{tablewriter.Bold, tablewriter.BgRedColor, tablewriter.FgWhiteColor},
+		tablewriter.Colors{tablewriter.BgGreenColor, tablewriter.FgHiWhiteColor})
+
+	data := [][]string{}
 	for i, found := range foundList {
-		sepFmt := color.BlueString("||")
-		fmt.Printf("%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n",
-			color.MagentaString("[num]"), color.GreenString("%d", i+1), sepFmt,
-			color.YellowString("[score]"), color.WhiteString("%f", found.Score), sepFmt,
-			color.YellowString("[name]"), color.GreenString(found.FullName), sepFmt,
-			color.YellowString("[url]"), color.WhiteString(found.Url), sepFmt,
-			color.YellowString("[topic]"), color.WhiteString("%s", found.Topics), sepFmt,
-			color.YellowString("[desc]"), color.CyanString(found.Description),
-		)
-		fmt.Println()
+		data = append(data, []string{
+			fmt.Sprintf("%d", i+1),
+			fmt.Sprintf("%f", found.Score),
+			found.FullName,
+			found.Url,
+			fmt.Sprintf("%s", found.Topics),
+			found.Description,
+		})
 	}
+	table.AppendBulk(data)
+	table.Render()
 }
 
 func init() {
