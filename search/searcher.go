@@ -34,6 +34,7 @@ var (
 type Searcher interface {
 	CreateIndex() error
 	Search(text string, size int) ([]*Result, error)
+	TotalDoc() (int, error)
 }
 
 type searcher struct {
@@ -114,6 +115,12 @@ func NewSearcher(token string) (Searcher, error) {
 	return &searcher{git: git, db: db, index: index, gitToken: token, dbPath: dbPath}, nil
 }
 
+// TotalDoc returns total of documents.
+func (s *searcher) TotalDoc() (int, error) {
+	count, err := s.index.DocCount()
+	return int(count), err
+}
+
 // Search executes full text search.
 func (s *searcher) Search(text string, size int) ([]*Result, error) {
 	text = strings.TrimSpace(text)
@@ -122,7 +129,7 @@ func (s *searcher) Search(text string, size int) ([]*Result, error) {
 	}
 
 	// search text from index.
-	query := bleve.NewMatchQuery(text)
+	query := bleve.NewQueryStringQuery(text)
 	search := bleve.NewSearchRequestOptions(query, size, 0, false)
 	search.SortBy([]string{"-_score", "_id"})
 	searchResult, err := s.index.Search(search)

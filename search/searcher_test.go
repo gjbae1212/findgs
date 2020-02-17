@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mitchellh/go-homedir"
 	"github.com/blevesearch/bleve"
 	"github.com/boltdb/bolt"
 	"github.com/gjbae1212/findgs/git"
+	"github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -56,6 +56,27 @@ func TestNewSearcher(t *testing.T) {
 		if err == nil {
 			s.(*searcher).db.Close()
 		}
+	}
+}
+
+func TestSearcher_TotalDoc(t *testing.T) {
+	assert := assert.New(t)
+	token := os.Getenv("GITHUB_TOKEN")
+	s, err := NewSearcher(token)
+	assert.NoError(err)
+	defer s.(*searcher).db.Close()
+	err = s.CreateIndex()
+	assert.NoError(err)
+
+	tests := map[string]struct {
+		isErr bool
+	}{
+		"success": {},
+	}
+
+	for _, t := range tests {
+		_, err := s.TotalDoc()
+		assert.Equal(t.isErr, err != nil)
 	}
 }
 
