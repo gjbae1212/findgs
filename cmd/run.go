@@ -41,8 +41,9 @@ var (
 )
 
 var (
-	foundList []*search.Result
-	foundMap  map[string]*search.Result
+	foundList             []*search.Result
+	foundMap              map[string]*search.Result
+	recentlySearchKeyword string
 )
 
 func preRun() execCommand {
@@ -64,6 +65,8 @@ func preRun() execCommand {
 
 func run() execCommand {
 	return func(cmd *cobra.Command, args []string) {
+		fmt.Println("\033[2J")
+		fmt.Print("\033[H")
 		p := prompt.New(executor, completer,
 			prompt.OptionPrefix(">>> "),
 			prompt.OptionPrefixTextColor(prompt.DefaultColor),
@@ -176,8 +179,8 @@ func executor(t string) {
 			return
 		}
 	case "search":
-		searchText := strings.Join(seps[1:], " ")
-		result, err := searcher.Search(searchText, maxSize)
+		recentlySearchKeyword = strings.Join(seps[1:], " ")
+		result, err := searcher.Search(recentlySearchKeyword, maxSize)
 		if err != nil {
 			color.Red("%s", err)
 			return
@@ -194,6 +197,12 @@ func executor(t string) {
 }
 
 func showSearchedList() {
+	// clear terminal.
+	fmt.Println("\033[2J")
+	fmt.Print("\033[H")
+	color.Green("[search][keyword] \"%s\"", recentlySearchKeyword)
+	fmt.Println()
+
 	// table writer
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"NUM", "SCORE", "NAME", "URL", "TOPIC", "DESCRIPTION"})
