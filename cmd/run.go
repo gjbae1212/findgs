@@ -12,7 +12,6 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var (
@@ -27,7 +26,7 @@ var (
 
 var (
 	searcher search.Searcher
-	maxSize  int
+	minScore = float64(0.1)
 )
 
 var (
@@ -35,6 +34,7 @@ var (
 	exitSuggest   = prompt.Suggest{Text: "exit", Description: "Good bye."}
 	openSuggest   = prompt.Suggest{Text: "open", Description: "Open a selected repository of found repositories to browser."}
 	listSuggest   = prompt.Suggest{Text: "list", Description: "Show searched repositories recently through search command."}
+	scoreSuggest  = prompt.Suggest{Text: "score", Description: "Set the score that can search repositories equal to or higher than the score.( 0 <= score < 1 )"}
 
 	openNumSuggest  = prompt.Suggest{Text: "num", Description: "Open url to browser using num value."}
 	openNameSuggest = prompt.Suggest{Text: "name", Description: "Open url to browser using name value."}
@@ -46,11 +46,16 @@ var (
 	recentlySearchKeyword string
 )
 
+var (
+	pt *prompt.Prompt
+)
+
 func preRun() execCommand {
 	return func(cmd *cobra.Command, args []string) {
 		if personalGithubToken == "" {
 			panicError(ErrNotFoundGithubToken)
 		}
+
 		var err error
 		searcher, err = search.NewSearcher(personalGithubToken)
 		if err != nil {
@@ -59,7 +64,6 @@ func preRun() execCommand {
 		if err := searcher.CreateIndex(); err != nil {
 			panicError(err)
 		}
-		maxSize = viper.Get("size").(int)
 	}
 }
 
@@ -67,11 +71,15 @@ func run() execCommand {
 	return func(cmd *cobra.Command, args []string) {
 		fmt.Println("\033[2J")
 		fmt.Print("\033[H")
-		p := prompt.New(executor, completer,
-			prompt.OptionPrefix(">>> "),
-			prompt.OptionPrefixTextColor(prompt.DefaultColor),
+		total, _ := searcher.TotalDoc()
+		color.Green("Indexing %d", total)
+		color.Green("Searching repositories equal to or higher %.3f score", minScore)
+		fmt.Println()
+		pt = prompt.New(executor, completer,
+			prompt.OptionPrefix(fmt.Sprintf("(Score: %.3f) >> ", minScore)),
+			prompt.OptionPrefixTextColor(prompt.Cyan),
 			prompt.OptionShowCompletionAtStart())
-		p.Run()
+		pt.Run()
 	}
 }
 
@@ -81,15 +89,40 @@ func completer(d prompt.Document) []prompt.Suggest {
 	suggests := []prompt.Suggest{}
 	switch {
 	case text == "":
-		suggests = append(suggests, searchSuggest, openSuggest, listSuggest, exitSuggest)
+		suggests = append(suggests, searchSuggest, openSuggest, listSuggest, scoreSuggest, exitSuggest)
 	case "exit" != text && strings.Contains("exit", text):
 		suggests = append(suggests, exitSuggest)
 	case "open" != text && strings.Contains("open", text):
 		suggests = append(suggests, openSuggest)
 	case "search" != text && strings.Contains("search", text):
 		suggests = append(suggests, searchSuggest)
+		fallthrough
+	case "score" != text && strings.Contains("score", text):
+		suggests = append(suggests, scoreSuggest)
 	case "list" != text && strings.Contains("list", text):
 		suggests = append(suggests, listSuggest)
+	case strings.HasPrefix(text, "score"):
+		if text == "score" {
+			for i := 0; i < 10; i++ {
+				suggests = append(suggests, prompt.Suggest{Text: fmt.Sprintf("0.%d", i)})
+			}
+			break
+		}
+		subText := strings.TrimSpace(text[5:])
+
+		if subText == "0" || subText == "0." {
+			for i := 0; i < 10; i++ {
+				suggests = append(suggests, prompt.Suggest{Text: fmt.Sprintf("0.%d", i)})
+			}
+			break
+		}
+
+		if _, err := strconv.ParseFloat(subText, 64); err == nil {
+			for i := 0; i < 10; i++ {
+				suggests = append(suggests, prompt.Suggest{Text: fmt.Sprintf("%s%d", subText, i)})
+			}
+			break
+		}
 	case strings.HasPrefix(text, "open"):
 		if text == "open" {
 			suggests = append(suggests, openNumSuggest, openNameSuggest)
@@ -178,17 +211,35 @@ func executor(t string) {
 			color.Green("Not matched Repository")
 			return
 		}
+	case "score":
+		scoreText := strings.TrimSpace(strings.Join(seps[1:], " "))
+		if f, err := strconv.ParseFloat(scoreText, 64); err != nil {
+			color.Red("Wrong score %s", scoreText)
+		} else {
+			if f < 0 || f >= 1 {
+				color.Red("Required 0 <= score < 1")
+				break
+			}
+			minScore = f
+			opt := prompt.OptionPrefix(fmt.Sprintf("(Score: %.3f) >> ", minScore))
+			opt(pt)
+			color.Green("Set score %.3f", minScore)
+		}
 	case "search":
 		recentlySearchKeyword = strings.Join(seps[1:], " ")
-		result, err := searcher.Search(recentlySearchKeyword, maxSize)
+		result, err := searcher.Search(recentlySearchKeyword, 10000)
 		if err != nil {
 			color.Red("%s", err)
 			return
 		}
-		foundList = result
+
+		foundList = []*search.Result{}
 		foundMap = make(map[string]*search.Result)
-		for _, found := range foundList {
-			foundMap[strings.ToLower(found.FullName)] = found
+		for _, found := range result {
+			if found.Score >= minScore {
+				foundMap[strings.ToLower(found.FullName)] = found
+				foundList = append(foundList, found)
+			}
 		}
 		showSearchedList()
 	default:
@@ -200,7 +251,7 @@ func showSearchedList() {
 	// clear terminal.
 	fmt.Println("\033[2J")
 	fmt.Print("\033[H")
-	color.Green("[search][keyword] \"%s\"", recentlySearchKeyword)
+	color.Green("[search][text] \"%s\"", recentlySearchKeyword)
 	fmt.Println()
 
 	// table writer
@@ -247,9 +298,5 @@ func showSearchedList() {
 }
 
 func init() {
-	runCommand.Flags().IntP("size", "s", 100, color.CyanString("max search total count"))
-
-	viper.BindPFlag("size", runCommand.Flags().Lookup("size"))
-
 	rootCmd.AddCommand(runCommand)
 }
