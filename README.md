@@ -8,7 +8,7 @@
 
 **FindGS** searches **your starred github repositories** that matched your input text from README, Name, Topic, Description.
 
-**Motivation**
+**Motivation**  
 Maybe you have many starred repositories in github for using it in someday.   
 With stacking more and more your starred repositories, you can **difficult** to find **wanted repositories** in starred repositories.   
 Because Github doesn't officially support to search it from README.          
@@ -19,10 +19,11 @@ Because Github doesn't officially support to search it from README.
 > And **FindGS** updates cached data an interval of 1 hour when running it.
 
 It's implemented using **Golang**.
-
+<br/> <br/>
 <p align="center">
 <img src="https://storage.googleapis.com/gjbae1212-asset/findgs/findgs_hello.gif"/>
 </p>
+<br/><br/>
 
 ## Getting Started
 ### Prerequisite
