@@ -2,11 +2,14 @@ package cmd
 
 import (
 	"fmt"
+
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
-	"github.com/c-bata/go-prompt"
+	prompt "github.com/c-bata/go-prompt"
+	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 	"github.com/gjbae1212/findgs/search"
 	"github.com/olekukonko/tablewriter"
@@ -57,6 +60,9 @@ func preRun() execCommand {
 		}
 
 		var err error
+		s := spinner.New(spinner.CharSets[7], 100*time.Millisecond) // Build our new spinner
+		s.Start()
+
 		searcher, err = search.NewSearcher(personalGithubToken)
 		if err != nil {
 			panicError(err)
@@ -64,6 +70,7 @@ func preRun() execCommand {
 		if err := searcher.CreateIndex(); err != nil {
 			panicError(err)
 		}
+		s.Stop()
 	}
 }
 
