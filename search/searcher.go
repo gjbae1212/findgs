@@ -4,13 +4,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/blevesearch/bleve"
+	bleve_search "github.com/blevesearch/bleve/search"
 	"github.com/boltdb/bolt"
 	"github.com/fatih/color"
 	"github.com/gjbae1212/findgs/git"
@@ -29,11 +32,13 @@ var (
 	configPath string
 	configOnce sync.Once
 	configErr  error
+
+	maxSize = 10000
 )
 
 type Searcher interface {
 	CreateIndex() error
-	Search(text string, size int) ([]*Result, error)
+	Search(text string, minScore float64) ([]*Result, error)
 	TotalDoc() (int, error)
 }
 
@@ -101,7 +106,7 @@ func NewSearcher(token string) (Searcher, error) {
 	}
 
 	// make bolt db
-	db, err := bolt.Open(dbPath, os.ModePerm, &bolt.Options{Timeout: 2 * time.Second})
+	db, err := bolt.Open(dbPath, os.ModePerm, &bolt.Options{Timeout: 5 * time.Second})
 	if err != nil {
 		return nil, fmt.Errorf("[err] NewSearcher fail db %w.(maybe already running findgs)", err)
 	}
@@ -122,19 +127,38 @@ func (s *searcher) TotalDoc() (int, error) {
 }
 
 // Search executes full text search.
-func (s *searcher) Search(text string, size int) ([]*Result, error) {
+func (s *searcher) Search(text string, minScore float64) ([]*Result, error) {
 	text = strings.TrimSpace(text)
 	if text == "" {
 		return []*Result{}, nil
 	}
 
-	// search text from index.
-	query := bleve.NewQueryStringQuery(text)
-	search := bleve.NewSearchRequestOptions(query, size, 0, false)
+	summary := map[string]*bleve_search.DocumentMatch{}
+
+	// search using matchquery from index.
+	search := bleve.NewSearchRequestOptions(bleve.NewMatchQuery(text), maxSize, 0, false)
 	search.SortBy([]string{"-_score", "_id"})
 	searchResult, err := s.index.Search(search)
 	if err != nil {
 		return nil, fmt.Errorf("[err] Search %w", err)
+	}
+	for _, d := range searchResult.Hits {
+		if d.Score >= minScore {
+			summary[d.ID] = d
+		}
+	}
+
+	// search using wildcardQuery from index.
+	search = bleve.NewSearchRequestOptions(bleve.NewWildcardQuery(text), maxSize, 0, false)
+	search.SortBy([]string{"-_score", "_id"})
+	searchResult, err = s.index.Search(search)
+	if err != nil {
+		return nil, fmt.Errorf("[err] Search %w", err)
+	}
+	for _, d := range searchResult.Hits {
+		if d.Score >= minScore {
+			summary[d.ID] = d
+		}
 	}
 
 	// get a detailed starred information
@@ -144,16 +168,16 @@ func (s *searcher) Search(text string, size int) ([]*Result, error) {
 		if bucket == nil {
 			return nil
 		}
-		for _, r := range searchResult.Hits {
-			data := bucket.Get([]byte(r.ID))
+		for _, doc := range summary {
+			data := bucket.Get([]byte(doc.ID))
 			var starred *git.Starred
 			if err := json.Unmarshal(data, &starred); err == nil {
-				list = append(list, &Result{Starred: starred, Score: r.Score})
+				list = append(list, &Result{Starred: starred, Score: doc.Score})
 			}
 		}
 		return nil
 	})
-
+	sort.Slice(list, func(i, j int) bool { return list[i].Score > list[j].Score })
 	return list, nil
 }
 

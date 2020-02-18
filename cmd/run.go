@@ -34,7 +34,7 @@ var (
 	exitSuggest   = prompt.Suggest{Text: "exit", Description: "Good bye."}
 	openSuggest   = prompt.Suggest{Text: "open", Description: "Open a selected repository of found repositories to browser."}
 	listSuggest   = prompt.Suggest{Text: "list", Description: "Show searched repositories recently through search command."}
-	scoreSuggest  = prompt.Suggest{Text: "score", Description: "Set the score that can search repositories equal to or higher than the score.( 0 <= score < 1 )"}
+	scoreSuggest  = prompt.Suggest{Text: "score", Description: "Set the score that can search repositories equal to or higher than the score.( 0 <= score)"}
 
 	openNumSuggest  = prompt.Suggest{Text: "num", Description: "Open url to browser using num value."}
 	openNameSuggest = prompt.Suggest{Text: "name", Description: "Open url to browser using name value."}
@@ -216,8 +216,8 @@ func executor(t string) {
 		if f, err := strconv.ParseFloat(scoreText, 64); err != nil {
 			color.Red("Wrong score %s", scoreText)
 		} else {
-			if f < 0 || f >= 1 {
-				color.Red("Required 0 <= score < 1")
+			if f < 0 {
+				color.Red("Required 0 <= score")
 				break
 			}
 			minScore = f
@@ -227,7 +227,7 @@ func executor(t string) {
 		}
 	case "search":
 		recentlySearchKeyword = strings.Join(seps[1:], " ")
-		result, err := searcher.Search(recentlySearchKeyword, 10000)
+		result, err := searcher.Search(recentlySearchKeyword, minScore)
 		if err != nil {
 			color.Red("%s", err)
 			return

@@ -91,19 +91,21 @@ func TestSearcher_Search(t *testing.T) {
 	assert.NoError(err)
 
 	tests := map[string]struct {
-		input string
-		isErr bool
+		input    string
+		minScore float64
+		isErr    bool
 	}{
-		"all": {input: "ssh certify"},
+		"all": {input: "ssh certify", minScore: 0.1},
 	}
 
 	for _, t := range tests {
-		result, err := s.Search(t.input, 1)
+		result, err := s.Search(t.input, t.minScore)
 		assert.Equal(t.isErr, err != nil)
 		if err == nil {
 			log.Printf("==============%s=============\n", t.input)
 			for _, r := range result {
-				log.Println(r.FullName, r.Score, r.Readme)
+				assert.True(r.Score >= t.minScore)
+				log.Println(r.FullName, r.Score)
 			}
 		}
 	}
