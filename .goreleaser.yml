@@ -38,9 +38,8 @@ brews:
   - name: findgs
     github:
       owner: gjbae1212
-      name: findgs
+      name: homebrew-findgs
     commit_author:
       name: gjbae1212
       email: gjbae1212@gmail.com
-    folder: Formula
     description: "findgs can search your starred repositories in the Github which matched searching text from title, description, topic, and README."
