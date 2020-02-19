@@ -82,33 +82,33 @@ $ finds run -t your-token
 **An interactive CLI** is currently to support the following commands: 
  
 **search**  
-`search` command searches your starred repositories using input text. Also it's to support wildcard searching.  
+This command searches your starred repositories using input text. Also it's to support wildcard searching.  
 ```bash  
 >> search cli tool for aws or gcp
 >> search hello* 
 ```  
 
 **open**  
-`open` command show your selected repository to browser.  
+This command show your selected repository to browser.  
 ```bash
 >> open name blahblah
 ```
 
 **list**  
-`list` command show recently searched result.
+This command show recently searched result.
 ```bash
 >> list
 ```
 
 **score**  
-`score` command sets a score that can search repositories equal to or higher than the score.( 0 <= score)
+This command sets a score that can search repositories equal to or higher than the score.( 0 <= score)
 ```bash
 # default score 0.1
 >> score 0.5 # change score to 0.5 
 ```
 
 **exit**  
-`exit` program.
+This  program.
 ```bash
 >> exit 
 ```    
