@@ -63,7 +63,6 @@ $ wget https://github.com/gjbae1212/findgs/releases/download/v1.0.1/findgs_1.0.1
 **FindGS** is currently to support the following features:
 - ```findgs clear```
 - ```findgs run```
-------
 #### findgs clear
 Delete cached db and indexed data in local.
 ```bash
@@ -79,8 +78,7 @@ or
 
 $ finds run -t your-token 
 ```
----- 
-
+ 
 **An interactive CLI is currently to support the following commands:** 
  
 **search**
@@ -112,7 +110,7 @@ $ finds run -t your-token
 **exit**
 `exit` program.
 ```bash
-exit 
+>> exit 
 ```    
 ------
 
