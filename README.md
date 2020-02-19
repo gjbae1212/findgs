@@ -37,12 +37,11 @@ It's required [**github personal access token**](https://github.com/settings/tok
   
 **This token should set global environment or pass to **findgs**.**
 ```bash
-# EX1)
-export GITHUB_TOKEN=your-token # .zshrc or .bash_profile 
-findgs run
-
-# EX2)
-findgs run -t your-token 
+# ex 1)
+$ export GITHUB_TOKEN=your-github-token # .zshrc or .bash_profile 
+$ findgs run 
+# ex 2)
+$ findgs run -t your-github-token 
 ```
 
 ### Install
@@ -58,6 +57,7 @@ $ wget https://github.com/gjbae1212/findgs/releases/download/v1.0.1/findgs_1.0.1
 # window
 $ wget https://github.com/gjbae1212/findgs/releases/download/v1.0.1/findgs_1.0.1_Windows_x86_64.tar.gz
 ```
+<br/>  
 
 ## Features
 **FindGS** is currently to support the following features:
@@ -68,42 +68,41 @@ $ wget https://github.com/gjbae1212/findgs/releases/download/v1.0.1/findgs_1.0.1
 ### findgs run
 Run an interactive CLI for searching your starred repositories in Github.
 ```bash
+# 1)
 $ findgs run # need to `export GITHUB_TOKEN=your-token`
-
-or 
-
-$ finds run -t your-token 
+# 2)
+$ findgs run -t your-github-token 
 ```
  
 **An interactive CLI** is currently to support the following commands: 
  
-**search**  
+**1. search**  
 This command searches your starred repositories using input text. Also it's to support wildcard searching.  
 ```bash  
 >> search <search for text(ex hello*, aws cli ...)> 
 ```  
 
-**open**  
+**2. open**  
 This command show your selected repository to browser.  
 ```bash
 >> open name <searched repositories name>
 >> open num <searched column num>
 ```
 
-**list**  
+**3. list**  
 This command show recently searched result.
 ```bash
 >> list
 ```
 
-**score**  
+**4. score**  
 This command sets a score that can search repositories equal to or higher than the score.( 0 <= score)
 ```bash
 # default score 0.1
 >> score 0.5 # change score to 0.5 
 ```
 
-**exit**  
+**5. exit**  
 This  program.
 ```bash
 >> exit 
