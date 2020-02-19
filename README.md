@@ -65,7 +65,7 @@ $ wget https://github.com/gjbae1212/findgs/releases/download/v1.0.1/findgs_1.0.1
 - ```findgs clear```
 
 ------
-#### findgs run
+### findgs run
 Run an interactive CLI for searching your starred repositories in Github.
 ```bash
 $ findgs run # need to `export GITHUB_TOKEN=your-token`
@@ -110,7 +110,7 @@ This  program.
 ```    
 ------
 
-#### findgs clear
+### findgs clear
 Delete cached db and indexed data in local.
 ```bash
 $ findgs clear
