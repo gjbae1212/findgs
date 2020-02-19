@@ -53,6 +53,7 @@ func TestModel_MarshalAndUnMarsahlJSON(t *testing.T) {
 		CreatedAt:       JsonTime{time.Now()},
 		UpdateAt:        JsonTime{time.Now()},
 		PushedAt:        JsonTime{time.Now()},
+		CachedAt:        JsonTime{time.Now()},
 	}
 	starredData, err := json.Marshal(starred)
 	assert.NoError(err)
@@ -74,6 +75,7 @@ func TestModel_MarshalAndUnMarsahlJSON(t *testing.T) {
 	assert.Equal(starred.CreatedAt.Unix(), rstarred.CreatedAt.Unix())
 	assert.Equal(starred.UpdateAt.Unix(), rstarred.UpdateAt.Unix())
 	assert.Equal(starred.PushedAt.Unix(), rstarred.PushedAt.Unix())
+	assert.Equal(starred.CachedAt.Unix(), rstarred.CachedAt.Unix())
 
 	// Readme
 	readme := &Readme{
@@ -183,7 +185,9 @@ func TestWrapper_ListStarredAll(t *testing.T) {
 			total := map[string]string{}
 			for _, star := range result {
 				total[star.FullName] = ""
+				assert.True(time.Now().Add(-1*time.Hour).Unix() < star.CachedAt.Unix())
 			}
+
 			color.Green("Total Starred %d %d", len(result), len(total))
 		}
 	}

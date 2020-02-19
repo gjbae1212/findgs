@@ -39,6 +39,7 @@ type Starred struct {
 	UpdateAt        JsonTime `json:"updated_at,omitempty"`
 	PushedAt        JsonTime `json:"pushed_at,omitempty"`
 	Readme          string   `json:"readme,omitempty"`
+	CachedAt        JsonTime `json:"cached_at,omitempty"`
 	Error           error    `json:"-"`
 }
 
@@ -143,7 +144,7 @@ func (w *wrapper) ListStarredAll() ([]*Starred, error) {
 			WatchersCount: star.GetRepository().GetWatchersCount(), StargazersCount: star.GetRepository().GetStargazersCount(),
 			ForksCount: star.GetRepository().GetForksCount(), StarredAt: JsonTime{star.GetStarredAt().Time},
 			CreatedAt: JsonTime{star.GetRepository().GetCreatedAt().Time}, UpdateAt: JsonTime{star.GetRepository().GetUpdatedAt().Time},
-			PushedAt: JsonTime{star.GetRepository().GetPushedAt().Time},
+			PushedAt: JsonTime{star.GetRepository().GetPushedAt().Time}, CachedAt: JsonTime{time.Now()},
 		})
 	}
 
