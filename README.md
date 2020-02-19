@@ -80,14 +80,14 @@ $ finds run -t your-token
 **search**  
 This command searches your starred repositories using input text. Also it's to support wildcard searching.  
 ```bash  
->> search cli tool for aws or gcp
->> search hello* 
+>> search <search for text(ex hello*, aws cli ...)> 
 ```  
 
 **open**  
 This command show your selected repository to browser.  
 ```bash
->> open name blahblah
+>> open name <searched repositories name>
+>> open num <searched column num>
 ```
 
 **list**  
