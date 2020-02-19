@@ -61,13 +61,9 @@ $ wget https://github.com/gjbae1212/findgs/releases/download/v1.0.1/findgs_1.0.1
 
 ## Features
 **FindGS** is currently to support the following features:
-- ```findgs clear```
 - ```findgs run```
-#### findgs clear
-Delete cached db and indexed data in local.
-```bash
-$ findgs clear
-```
+- ```findgs clear```
+
 ------
 #### findgs run
 Run an interactive CLI for searching your starred repositories in Github.
@@ -113,6 +109,12 @@ This  program.
 >> exit 
 ```    
 ------
+
+#### findgs clear
+Delete cached db and indexed data in local.
+```bash
+$ findgs clear
+```
 
 ## License
 This project is following The MIT.
