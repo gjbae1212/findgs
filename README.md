@@ -17,7 +17,7 @@ Because github site doesn't officially support to search for it in README.
 > Notice that **FindGS** makes internally caching db and indexing in local.
 > Because Github API is limited 5000 per hourly, so it's required something for caching and for searching with higher performance.  
 > And **FindGS** updates cached data an interval of 1 hour when running it.  
-> **If you have had starred repositories more than 5000**, you should run findgs an interval of 1 hour.(Github API is limited 5000 per hourly)  
+> **If you have had starred repositories more than 5000**, you should run findgs an interval of 1 hour for caching rest repositories.(Github API is limited 5000 per hourly)  
 > As a result, All of starred repositories can store caching db and indexing in local.
 
 It's implemented using **Golang**.
