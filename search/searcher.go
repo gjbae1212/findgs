@@ -278,7 +278,7 @@ func (s *searcher) CreateIndex() error {
 					newStarred.FullName, newStarred.PushedAt.Format(time.RFC3339))
 			} else {
 				if oldStarred.PushedAt.Unix() != newStarred.PushedAt.Unix() &&
-					oldStarred.CachedAt.Unix() < time.Now().Add(-24*time.Hour).Unix() {
+					oldStarred.CachedAt.Unix() < time.Now().Add(-24*7*time.Hour).Unix() { // after 7 days.
 					updateList = append(updateList, newStarred)
 					color.White("[update] %s repository pushed_at %s",
 						newStarred.FullName, newStarred.PushedAt.Format(time.RFC3339))

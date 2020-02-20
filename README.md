@@ -17,6 +17,8 @@ Because github site doesn't officially support to search for it in README.
 > Notice that **FindGS** makes internally caching db and indexing in local.
 > Because Github API is limited 5000 per hourly, so it's required something for caching and for searching with higher performance.  
 > And **FindGS** updates cached data an interval of 1 hour when running it.
+> **If you have had starred repositories more than 5000**, you should run findgs an interval of 1 hour.(Github API is limited 5000 per hourly)
+> As a result, All of starred repositories can store caching db and indexing in local.
 
 It's implemented using **Golang**.
 <br/> <br/>
@@ -52,10 +54,10 @@ $ brew tap gjbae1212/findgs
 $ brew install findgs
 
 # linux
-$ wget https://github.com/gjbae1212/findgs/releases/download/v1.0.1/findgs_1.0.1_Linux_x86_64.tar.gz
+$ wget https://github.com/gjbae1212/findgs/releases/download/v1.0.2/findgs_1.0.2_Linux_x86_64.tar.gz
 
 # window
-$ wget https://github.com/gjbae1212/findgs/releases/download/v1.0.1/findgs_1.0.1_Windows_x86_64.tar.gz
+$ wget https://github.com/gjbae1212/findgs/releases/download/v1.0.2/findgs_1.0.2_Windows_x86_64.tar.gz
 ```
 <br/>  
 
@@ -79,14 +81,14 @@ $ findgs run -t your-github-token
 **1. search**  
 This command searches your starred repositories using input text. Also it's to support wildcard searching.  
 ```bash  
->> search <search for text(ex hello*, aws cli ...)> 
+>> search [searhing text(ex cli tool, hello* ...)] 
 ```  
 
 **2. open**  
 This command show your selected repository to browser.  
 ```bash
->> open name <searched repositories name>
->> open num <searched column num>
+>> open name [searched repositories name]
+>> open num [searched column num]
 ```
 
 **3. list**  

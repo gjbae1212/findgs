@@ -8,10 +8,12 @@ import (
 	"strings"
 	"time"
 
-	prompt "github.com/c-bata/go-prompt"
 	"github.com/briandowns/spinner"
+	"github.com/inancgumus/screen"
+	prompt "github.com/c-bata/go-prompt"
 	"github.com/fatih/color"
 	"github.com/gjbae1212/findgs/search"
+	"github.com/mattn/go-colorable"
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
@@ -76,8 +78,8 @@ func preRun() execCommand {
 
 func run() execCommand {
 	return func(cmd *cobra.Command, args []string) {
-		fmt.Println("\033[2J")
-		fmt.Print("\033[H")
+		screen.Clear()
+		screen.MoveTopLeft()
 		total, _ := searcher.TotalDoc()
 		color.Green("Indexing %d", total)
 		color.Green("Searching repositories equal to or higher %.3f score", minScore)
@@ -256,13 +258,13 @@ func executor(t string) {
 
 func showSearchedList() {
 	// clear terminal.
-	fmt.Println("\033[2J")
-	fmt.Print("\033[H")
+	screen.Clear()
+	screen.MoveTopLeft()
 	color.Green("[search][text] \"%s\"", recentlySearchKeyword)
 	fmt.Println()
 
 	// table writer
-	table := tablewriter.NewWriter(os.Stdout)
+	table := tablewriter.NewWriter(colorable.NewColorableStdout())
 	table.SetHeader([]string{"NUM", "SCORE", "NAME", "URL", "TOPIC", "DESCRIPTION"})
 	table.SetFooter([]string{"", "", "", "", "TOTAL", fmt.Sprintf("%d", len(foundList))})
 	table.SetBorder(false)
