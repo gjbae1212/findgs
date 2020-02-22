@@ -55,10 +55,10 @@ $ brew tap gjbae1212/findgs
 $ brew install findgs
 
 # linux
-$ wget https://github.com/gjbae1212/findgs/releases/download/v1.0.4/findgs_1.0.4_Linux_x86_64.tar.gz
+$ wget https://github.com/gjbae1212/findgs/releases/download/v1.0.5/findgs_1.0.5_Linux_x86_64.tar.gz
 
 # window
-$ wget https://github.com/gjbae1212/findgs/releases/download/v1.0.4/findgs_1.0.4_Windows_x86_64.tar.gz
+$ wget https://github.com/gjbae1212/findgs/releases/download/v1.0.5/findgs_1.0.5_Windows_x86_64.tar.gz
 ```
 <br/>  
 
