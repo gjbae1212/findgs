@@ -16,6 +16,7 @@ Because github site doesn't officially support to search for it in README.
 **FindGS** is an interactive CLI using your github token for searching repositories.
 > Notice that **FindGS** makes internally caching db and indexing in local.
 > Because Github API is limited 5000 per hourly, so it's required something for caching and for searching with higher performance.  
+> So It would slow it boots somewhat for caching and indexing if the first run it.  
 > And **FindGS** updates cached data an interval of 1 hour when running it.  
 > **If you have had starred repositories more than 5000**, you should run findgs an interval of 1 hour for caching rest repositories.(Github API is limited 5000 per hourly)  
 > As a result, All of starred repositories can store caching db and indexing in local.
@@ -54,10 +55,10 @@ $ brew tap gjbae1212/findgs
 $ brew install findgs
 
 # linux
-$ wget https://github.com/gjbae1212/findgs/releases/download/v1.0.2/findgs_1.0.2_Linux_x86_64.tar.gz
+$ wget https://github.com/gjbae1212/findgs/releases/download/v1.0.3/findgs_1.0.3_Linux_x86_64.tar.gz
 
 # window
-$ wget https://github.com/gjbae1212/findgs/releases/download/v1.0.2/findgs_1.0.2_Windows_x86_64.tar.gz
+$ wget https://github.com/gjbae1212/findgs/releases/download/v1.0.3/findgs_1.0.3_Windows_x86_64.tar.gz
 ```
 <br/>  
 
