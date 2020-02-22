@@ -136,6 +136,7 @@ func (w *wrapper) ListStarredAll() ([]*Starred, error) {
 		lock := &sync.Mutex{}
 		wg := sync.WaitGroup{}
 		var multiQueue []chan int
+		var raisedErrors []error
 		for i := 0; i < parallelSize; i++ {
 			wg.Add(1)
 			ch := make(chan int, lastPage/parallelSize+parallelSize)
@@ -150,6 +151,7 @@ func (w *wrapper) ListStarredAll() ([]*Starred, error) {
 						default:
 							color.Red("[fail] getting github page %d %s", r, err.Error())
 						}
+						raisedErrors = append(raisedErrors, err)
 						continue
 					}
 					// race condition.
@@ -173,6 +175,9 @@ func (w *wrapper) ListStarredAll() ([]*Starred, error) {
 		}
 
 		wg.Wait()
+		if len(raisedErrors) != 0 {
+			return nil, fmt.Errorf("[err] ListStarredAll error count %d", len(raisedErrors))
+		}
 	}
 
 	var starred []*Starred
