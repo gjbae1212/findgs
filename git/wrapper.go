@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/fatih/color"
 	"sync"
 	"time"
 
@@ -115,24 +116,63 @@ func (w *wrapper) User() (*User, error) {
 // ListStarredAll returns all of starred projects.
 func (w *wrapper) ListStarredAll() ([]*Starred, error) {
 	var repos []*github.StarredRepository
-	page := 1
-	for {
-		paging, resp, err := w.listStarredPaging(page, perPage)
+	initPage := 1
+	lastPage := 1
 
-		// check whether raised error or not.
-		switch {
-		case errors.As(err, &githubRateLimit):
+	// first requests
+	paging, resp, err := w.listStarredPaging(initPage, perPage)
+	if err != nil {
+		if errors.As(err, &githubRateLimit) {
 			return nil, fmt.Errorf("[err] ListStarredAll %w", ErrApiQuotaExceed)
-		case err != nil:
-			return nil, fmt.Errorf("[err] ListStarredAll %w", err)
+		}
+		return nil, fmt.Errorf("[err] ListStarredAll %w", err)
+	}
+	// getting last page.
+	lastPage = resp.LastPage
+	// append repos
+	repos = append(repos, paging...)
+	if initPage >= resp.LastPage {
+	} else {
+		lock := &sync.Mutex{}
+		wg := sync.WaitGroup{}
+		var multiQueue []chan int
+		for i := 0; i < parallelSize; i++ {
+			wg.Add(1)
+			ch := make(chan int, lastPage/parallelSize+parallelSize)
+			multiQueue = append(multiQueue, ch)
+			go func(queue chan int) {
+				for r := range queue {
+					paging, _, err := w.listStarredPaging(r, perPage)
+					if err != nil {
+						switch {
+						case errors.As(err, &githubRateLimit):
+							color.Red("[fail] getting github page %d %s", r, ErrApiQuotaExceed)
+						default:
+							color.Red("[fail] getting github page %d %s", r, err.Error())
+						}
+						continue
+					}
+					// race condition.
+					lock.Lock()
+					repos = append(repos, paging...)
+					lock.Unlock()
+				}
+				wg.Done()
+			}(ch)
 		}
 
-		// append repos
-		repos = append(repos, paging...)
-		if page >= resp.LastPage {
-			break
+		// send requests
+		for i := initPage + 1; i <= lastPage; i++ {
+			hole := i % parallelSize
+			multiQueue[hole] <- i
 		}
-		page += 1
+
+		// close channel
+		for _, ch := range multiQueue {
+			close(ch)
+		}
+
+		wg.Wait()
 	}
 
 	var starred []*Starred
