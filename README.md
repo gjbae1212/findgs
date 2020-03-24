@@ -32,8 +32,9 @@ It's implemented using **Golang**.
 
 ### Prerequisite
 It's required [**github personal access token**](https://github.com/settings/tokens).
+(But scopes of token aren't required.)
 <p align="center">
-<img src="https://storage.googleapis.com/gjbae1212-asset/findgs/findgs_token.png"/>
+<img src="https://storage.googleapis.com/gjbae1212-asset/findgs/findgs_token2.png"/>
 </p>
 <br/>
 
