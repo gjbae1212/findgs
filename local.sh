@@ -13,19 +13,31 @@ function test
 
 function release
 {
-   phase=$1
-   case "$phase" in
-   test)
-     goreleaser release --snapshot --skip-publish
-     ;;
-   real)
-     goreleaser release --rm-dist
-     ;;
-   *)
-     echo "unsupported phase=$phase"
+  sudo rm -rf $CURRENT/dist
+  sudo rm -rf $CURRENT/gopath
+  export GOPATH=$CURRENT/gopath
+
+  tag=$1
+  if [ -z "$tag" ]
+  then
+     echo "not found tag name"
      exit 1
-   esac
+  fi
+
+  git tag -a $tag -m "Add $tag"
+  git push origin $tag
+
+  goreleaser release --rm-dist
 }
+
+function release_test
+{
+  sudo rm -rf $CURRENT/dist
+  sudo rm -rf $CURRENT/gopath
+  export GOPATH=$CURRENT/gopath
+  goreleaser release --snapshot --rm-dist
+}
+
 
 function set_env
 {

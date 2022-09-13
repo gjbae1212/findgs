@@ -5,8 +5,6 @@ before:
     - go mod tidy
 builds:
   - binary: findgs
-    id: findgs
-    main: ./main.go
     env:
       - CGO_ENABLED=0
     goos:
@@ -15,15 +13,24 @@ builds:
       - linux
     goarch:
       - amd64
+      - arm64
+    asmflags:
+      - all=-trimpath={{.Env.GOPATH}}
+    gcflags:
+      - all=-trimpath={{.Env.GOPATH}}
+    ignore:
+      - goos: windows
+        goarch: arm64
 archives:
   - replacements:
       darwin: Darwin
       linux: Linux
       windows: Windows
-      386: i386
       amd64: x86_64
     format: tar.gz
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    files:
+      - README.md
 changelog:
   sort: asc
   filters:
@@ -36,7 +43,7 @@ release:
     name: findgs
 brews:
   - name: findgs
-    github:
+    tap:
       owner: gjbae1212
       name: homebrew-findgs
     commit_author:

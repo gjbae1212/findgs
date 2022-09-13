@@ -2,4 +2,6 @@
 local_env.sh
 *.bleve
 findgs
-dist/
+dist
+vendor
+gopath
